@@ -47,16 +47,71 @@ HGLRC ImageProcessing::MainForm::initializeOpenGLContext(HDC hDC)
 	}
 
 	glViewport(0, 0, panel1->Width, panel1->Height);
-	glClearColor(0, 0, 0, 1);
+	glClearColor(1, 1, 1, 1);
+	glEnable(GL_TEXTURE_2D);
+	glPixelStorei(GL_PACK_ALIGNMENT, 1);
+	glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	wglMakeCurrent(NULL, NULL);
 
 	return hGLRC;
 }
 
-void ImageProcessing::MainForm::drawImage()
+void ImageProcessing::MainForm::updateTexture()
 {
 	wglMakeCurrent(hDC, hGLRC);
 	glClear(GL_COLOR_BUFFER_BIT);
+	glMatrixMode(GL_MODELVIEW);
+	glLoadIdentity();
+
+	if (this->texture) {
+		GLuint texture = this->texture;
+		glDeleteTextures(1, &texture);
+		this->texture = 0;
+	}
+
+	if (image) {
+		GLuint texture;
+		glGenTextures(1, &texture);
+		glBindTexture(GL_TEXTURE_2D, texture);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, image->width, image->height, 0, GL_RGBA, GL_UNSIGNED_BYTE, image->data);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, gLNEARESTToolStripMenuItem->Checked ? GL_NEAREST : GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, gLNEARESTToolStripMenuItem->Checked ? GL_NEAREST : GL_LINEAR);
+		glBindTexture(GL_TEXTURE_2D, 0);
+		this->texture = texture;
+	}
+
+	wglMakeCurrent(NULL, NULL);
+	draw();
+}
+
+void ImageProcessing::MainForm::draw()
+{
+	wglMakeCurrent(hDC, hGLRC);
+	glViewport(0, 0, panel1->Width, panel1->Height);
+	glClear(GL_COLOR_BUFFER_BIT);
+	glMatrixMode(GL_MODELVIEW);
+	glLoadIdentity();
+
+	if (texture) {
+		float scaleX = ((float)image->width / image->height) / ((float)panel1->Width / panel1->Height);
+		float scaleY = ((float)image->height / image->width) / ((float)panel1->Height / panel1->Width);
+		scaleX = scaleX < 1 ? scaleX : 1;
+		scaleY = scaleY < 1 ? scaleY : 1;
+		glColor3f(1, 1, 1);
+		glBindTexture(GL_TEXTURE_2D, texture);
+		glBegin(GL_QUADS);
+		glTexCoord2f(0, -1);
+		glVertex2f(-scaleX, scaleY);
+		glTexCoord2f(1, -1);
+		glVertex2f(scaleX, scaleY);
+		glTexCoord2f(1, 0);
+		glVertex2f(scaleX, -scaleY);
+		glTexCoord2f(0, 0);
+		glVertex2f(-scaleX, -scaleY);
+		glEnd();
+	}
 
 	wglMakeCurrent(NULL, NULL);
 }
