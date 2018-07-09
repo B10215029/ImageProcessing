@@ -61,9 +61,6 @@ HGLRC ImageProcessing::MainForm::initializeOpenGLContext(HDC hDC)
 void ImageProcessing::MainForm::updateTexture()
 {
 	wglMakeCurrent(hDC, hGLRC);
-	glClear(GL_COLOR_BUFFER_BIT);
-	glMatrixMode(GL_MODELVIEW);
-	glLoadIdentity();
 
 	if (this->texture) {
 		GLuint texture = this->texture;

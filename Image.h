@@ -6,6 +6,7 @@ namespace ImageProcessing {
 		~Image();
 		int width;
 		int height;
+		int progress;
 		unsigned char* data;
 	};
 }
