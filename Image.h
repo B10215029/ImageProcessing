@@ -11,5 +11,24 @@ namespace ImageProcessing {
 		int offsetX;
 		int offsetY;
 		unsigned char* data;
+
+	public:
+		void gray();
+		void over(Image* image);
+	};
+
+	ref struct ImageVoidArgFunctionObject
+	{
+		typedef void (Image::*FunctionType)(void);
+		FunctionType func;
+		ImageVoidArgFunctionObject(FunctionType func) : func(func) {}
+	};
+
+	ref struct ImageImageArgFunctionObject
+	{
+		typedef void (Image::*FunctionType)(Image*);
+		FunctionType func;
+		Image* image;
+		ImageImageArgFunctionObject(FunctionType func, Image* image2) : func(func), image(image2) {}
 	};
 }

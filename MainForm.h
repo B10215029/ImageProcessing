@@ -23,7 +23,6 @@ namespace ImageProcessing {
 			InitializeComponent();
 			this->progressTimer = gcnew System::Windows::Forms::Timer();
 			this->progressTimer->Tick += gcnew System::EventHandler(this, &MainForm::progressTimer_Tick);
-			this->progressTimer->Enabled = true;
 			this->panel1->MouseDown += (gcnew System::Windows::Forms::MouseEventHandler(this, &MainForm::panel1_MouseDown));
 			this->panel1->MouseUp += (gcnew System::Windows::Forms::MouseEventHandler(this, &MainForm::panel1_MouseUp));
 			this->panel1->MouseMove += (gcnew System::Windows::Forms::MouseEventHandler(this, &MainForm::panel1_MouseMove));
@@ -53,9 +52,6 @@ namespace ImageProcessing {
 			if (components)
 			{
 				delete components;
-				if (image) {
-					delete image;
-				}
 			}
 		}
 
@@ -71,6 +67,7 @@ namespace ImageProcessing {
 		int mouseY;
 		bool mouseDown;
 		System::String^ imageFileName;
+		System::Threading::Thread^ progressingThread;
 		System::ComponentModel::Container ^components;
 	private: System::Windows::Forms::MenuStrip^  menuStrip1;
 	private: System::Windows::Forms::ToolStripMenuItem^  fileToolStripMenuItem;
@@ -131,6 +128,7 @@ namespace ImageProcessing {
 			this->panel1 = (gcnew System::Windows::Forms::Panel());
 			this->menuStrip1 = (gcnew System::Windows::Forms::MenuStrip());
 			this->fileToolStripMenuItem = (gcnew System::Windows::Forms::ToolStripMenuItem());
+			this->resetImageToolStripMenuItem = (gcnew System::Windows::Forms::ToolStripMenuItem());
 			this->openImageToolStripMenuItem = (gcnew System::Windows::Forms::ToolStripMenuItem());
 			this->saveImageToolStripMenuItem = (gcnew System::Windows::Forms::ToolStripMenuItem());
 			this->toolStripSeparator1 = (gcnew System::Windows::Forms::ToolStripSeparator());
@@ -173,7 +171,6 @@ namespace ImageProcessing {
 			this->toolStripProgressBar1 = (gcnew System::Windows::Forms::ToolStripProgressBar());
 			this->openFileDialog1 = (gcnew System::Windows::Forms::OpenFileDialog());
 			this->saveFileDialog1 = (gcnew System::Windows::Forms::SaveFileDialog());
-			this->resetImageToolStripMenuItem = (gcnew System::Windows::Forms::ToolStripMenuItem());
 			this->menuStrip1->SuspendLayout();
 			this->statusStrip1->SuspendLayout();
 			this->SuspendLayout();
@@ -212,24 +209,31 @@ namespace ImageProcessing {
 			this->fileToolStripMenuItem->Size = System::Drawing::Size(38, 20);
 			this->fileToolStripMenuItem->Text = L"File";
 			// 
+			// resetImageToolStripMenuItem
+			// 
+			this->resetImageToolStripMenuItem->Name = L"resetImageToolStripMenuItem";
+			this->resetImageToolStripMenuItem->Size = System::Drawing::Size(145, 22);
+			this->resetImageToolStripMenuItem->Text = L"Reset Image";
+			this->resetImageToolStripMenuItem->Click += gcnew System::EventHandler(this, &MainForm::resetImageToolStripMenuItem_Click);
+			// 
 			// openImageToolStripMenuItem
 			// 
 			this->openImageToolStripMenuItem->Name = L"openImageToolStripMenuItem";
-			this->openImageToolStripMenuItem->Size = System::Drawing::Size(180, 22);
+			this->openImageToolStripMenuItem->Size = System::Drawing::Size(145, 22);
 			this->openImageToolStripMenuItem->Text = L"Open Image";
 			this->openImageToolStripMenuItem->Click += gcnew System::EventHandler(this, &MainForm::openImageToolStripMenuItem_Click);
 			// 
 			// saveImageToolStripMenuItem
 			// 
 			this->saveImageToolStripMenuItem->Name = L"saveImageToolStripMenuItem";
-			this->saveImageToolStripMenuItem->Size = System::Drawing::Size(180, 22);
+			this->saveImageToolStripMenuItem->Size = System::Drawing::Size(145, 22);
 			this->saveImageToolStripMenuItem->Text = L"Save Image";
 			this->saveImageToolStripMenuItem->Click += gcnew System::EventHandler(this, &MainForm::saveImageToolStripMenuItem_Click);
 			// 
 			// toolStripSeparator1
 			// 
 			this->toolStripSeparator1->Name = L"toolStripSeparator1";
-			this->toolStripSeparator1->Size = System::Drawing::Size(177, 6);
+			this->toolStripSeparator1->Size = System::Drawing::Size(142, 6);
 			// 
 			// filterModeToolStripMenuItem
 			// 
@@ -238,7 +242,7 @@ namespace ImageProcessing {
 					this->gLLINEARToolStripMenuItem
 			});
 			this->filterModeToolStripMenuItem->Name = L"filterModeToolStripMenuItem";
-			this->filterModeToolStripMenuItem->Size = System::Drawing::Size(180, 22);
+			this->filterModeToolStripMenuItem->Size = System::Drawing::Size(145, 22);
 			this->filterModeToolStripMenuItem->Text = L"Filter Mode";
 			// 
 			// gLNEARESTToolStripMenuItem
@@ -429,31 +433,32 @@ namespace ImageProcessing {
 			// overToolStripMenuItem
 			// 
 			this->overToolStripMenuItem->Name = L"overToolStripMenuItem";
-			this->overToolStripMenuItem->Size = System::Drawing::Size(102, 22);
+			this->overToolStripMenuItem->Size = System::Drawing::Size(180, 22);
 			this->overToolStripMenuItem->Text = L"Over";
+			this->overToolStripMenuItem->Click += gcnew System::EventHandler(this, &MainForm::overToolStripMenuItem_Click);
 			// 
 			// inToolStripMenuItem
 			// 
 			this->inToolStripMenuItem->Name = L"inToolStripMenuItem";
-			this->inToolStripMenuItem->Size = System::Drawing::Size(102, 22);
+			this->inToolStripMenuItem->Size = System::Drawing::Size(180, 22);
 			this->inToolStripMenuItem->Text = L"In";
 			// 
 			// outToolStripMenuItem
 			// 
 			this->outToolStripMenuItem->Name = L"outToolStripMenuItem";
-			this->outToolStripMenuItem->Size = System::Drawing::Size(102, 22);
+			this->outToolStripMenuItem->Size = System::Drawing::Size(180, 22);
 			this->outToolStripMenuItem->Text = L"Out";
 			// 
 			// atopToolStripMenuItem
 			// 
 			this->atopToolStripMenuItem->Name = L"atopToolStripMenuItem";
-			this->atopToolStripMenuItem->Size = System::Drawing::Size(102, 22);
+			this->atopToolStripMenuItem->Size = System::Drawing::Size(180, 22);
 			this->atopToolStripMenuItem->Text = L"Atop";
 			// 
 			// xorToolStripMenuItem
 			// 
 			this->xorToolStripMenuItem->Name = L"xorToolStripMenuItem";
-			this->xorToolStripMenuItem->Size = System::Drawing::Size(102, 22);
+			this->xorToolStripMenuItem->Size = System::Drawing::Size(180, 22);
 			this->xorToolStripMenuItem->Text = L"Xor";
 			// 
 			// bonusToolStripMenuItem
@@ -498,13 +503,6 @@ namespace ImageProcessing {
 			// 
 			this->openFileDialog1->FileName = L"openFileDialog1";
 			// 
-			// resetImageToolStripMenuItem
-			// 
-			this->resetImageToolStripMenuItem->Name = L"resetImageToolStripMenuItem";
-			this->resetImageToolStripMenuItem->Size = System::Drawing::Size(180, 22);
-			this->resetImageToolStripMenuItem->Text = L"Reset Image";
-			this->resetImageToolStripMenuItem->Click += gcnew System::EventHandler(this, &MainForm::resetImageToolStripMenuItem_Click);
-			// 
 			// MainForm
 			// 
 			this->AutoScaleDimensions = System::Drawing::SizeF(6, 12);
@@ -515,6 +513,7 @@ namespace ImageProcessing {
 			this->Controls->Add(this->panel1);
 			this->Name = L"MainForm";
 			this->Text = L"Image Processing";
+			this->FormClosed += gcnew System::Windows::Forms::FormClosedEventHandler(this, &MainForm::MainForm_FormClosed);
 			this->Shown += gcnew System::EventHandler(this, &MainForm::MainForm_Shown);
 			this->menuStrip1->ResumeLayout(false);
 			this->menuStrip1->PerformLayout();
@@ -525,12 +524,20 @@ namespace ImageProcessing {
 
 		}
 #pragma endregion
-	private: System::Void MainForm_Shown(System::Object^  sender, System::EventArgs^  e) {
-		draw();
+private: System::Void MainForm_Shown(System::Object^  sender, System::EventArgs^  e) {
+	draw();
+}
+private: System::Void MainForm_FormClosed(System::Object^  sender, System::Windows::Forms::FormClosedEventArgs^  e) {
+	if (progressingThread && progressingThread->IsAlive) {
+		progressingThread->Abort();
 	}
-	private: System::Void panel1_Resize(System::Object^  sender, System::EventArgs^  e) {
-		draw();
+	if (image) {
+		delete image;
 	}
+}
+private: System::Void panel1_Resize(System::Object^  sender, System::EventArgs^  e) {
+	draw();
+}
 private: System::Void gLNEARESTToolStripMenuItem_CheckedChanged(System::Object^  sender, System::EventArgs^  e) {
 	if (this->gLNEARESTToolStripMenuItem->Checked) {
 		this->gLLINEARToolStripMenuItem->Checked = false;
@@ -632,7 +639,7 @@ private: System::Void panel1_MouseWheel(System::Object^  sender, System::Windows
 	}
 }
 private: System::Void panel1_DragDrop(System::Object^  sender, System::Windows::Forms::DragEventArgs^  e) {
-	auto imageFileName = ((array<String^>^)(e->Data->GetData(DataFormats::FileDrop)))[0];
+	System::String^ imageFileName = ((array<String^>^)(e->Data->GetData(DataFormats::FileDrop)))[0];
 	setImage(imageFileName);
 }
 private: System::Void panel1_DragEnter(System::Object^  sender, System::Windows::Forms::DragEventArgs^  e) {
@@ -643,7 +650,7 @@ private: System::Void panel1_DragEnter(System::Object^  sender, System::Windows:
 }
 private: System::Void progressTimer_Tick(System::Object^  sender, System::EventArgs^  e) {
 	if (image) {
-		this->toolStripProgressBar1->Value = min(max(image->progress, 0), 100);
+		SetProgress(image->progress);
 	}
 }
 private: System::Void resetImageToolStripMenuItem_Click(System::Object^  sender, System::EventArgs^  e) {
@@ -651,8 +658,66 @@ private: System::Void resetImageToolStripMenuItem_Click(System::Object^  sender,
 		setImage(imageFileName);
 	}
 }
+delegate void BoolArgReturningVoidDelegate(bool enable);
+private: System::Void SetProgressTimerEnable(bool enable) {
+	if (this->InvokeRequired) {
+		this->Invoke(gcnew BoolArgReturningVoidDelegate(this, &MainForm::SetProgressTimerEnable), enable);
+	}
+	else {
+		this->progressTimer->Enabled = enable;
+	}
+}
+delegate void IntegerArgReturningVoidDelegate(int value);
+private: System::Void SetProgress(int value) {
+	if (this->toolStripProgressBar1->GetCurrentParent()->InvokeRequired) {
+		this->toolStripProgressBar1->GetCurrentParent()->Invoke(gcnew IntegerArgReturningVoidDelegate(this, &MainForm::SetProgress), value);
+	}
+	else {
+		this->toolStripProgressBar1->Value = min(max(value, 0), 100);
+	}
+}
+delegate void StringArgReturningVoidDelegate(System::String^ str);
+private: System::Void SetStatus(System::String^ str) {
+	if (this->toolStripStatusLabel1->GetCurrentParent()->InvokeRequired) {
+		this->toolStripStatusLabel1->GetCurrentParent()->Invoke(gcnew StringArgReturningVoidDelegate(this, &MainForm::SetStatus), str);
+	}
+	else {
+		this->toolStripStatusLabel1->Text = str;
+	}
+}
+private: System::Void runProcessing(Object^ args) {
+	if (image && !this->progressTimer->Enabled) {
+		SetProgressTimerEnable(true);
+		//(image->*(*reinterpret_cast<ImageMethod*>(static_cast<System::IntPtr>(obj).ToPointer())))();
+		if (dynamic_cast<ImageVoidArgFunctionObject^>(args)) {
+			ImageVoidArgFunctionObject^ data = dynamic_cast<ImageVoidArgFunctionObject^>(args);
+			(image->*data->func)();
+		}
+		else if (dynamic_cast<ImageImageArgFunctionObject^>(args)) {
+			ImageImageArgFunctionObject^ data = dynamic_cast<ImageImageArgFunctionObject^>(args);
+			(image->*data->func)(data->image);
+			delete data->image;
+		}
+		SetProgressTimerEnable(false);
+		SetProgress(0);
+		updateTexture();
+	}
+}
+private: System::Void startProcessing(ImageVoidArgFunctionObject::FunctionType func) {
+	progressingThread = gcnew System::Threading::Thread(gcnew System::Threading::ParameterizedThreadStart(this, &MainForm::runProcessing));
+	progressingThread->Start(gcnew ImageVoidArgFunctionObject(func));
+}
+private: System::Void startProcessing(ImageImageArgFunctionObject::FunctionType func) {
+	if (openFileDialog1->ShowDialog() == System::Windows::Forms::DialogResult::OK) {
+		progressingThread = gcnew System::Threading::Thread(gcnew System::Threading::ParameterizedThreadStart(this, &MainForm::runProcessing));
+		progressingThread->Start(gcnew ImageImageArgFunctionObject(func, openImage(openFileDialog1->FileName)));
+	}
+}
 private: System::Void grayToolStripMenuItem_Click(System::Object^  sender, System::EventArgs^  e) {
-	System::Threading::Thread::Sleep(10000);
+	startProcessing(&Image::gray);
+}
+private: System::Void overToolStripMenuItem_Click(System::Object^  sender, System::EventArgs^  e) {
+	startProcessing(&Image::over);
 }
 };
 }
