@@ -28,6 +28,7 @@ namespace ImageProcessing {
 			hGLRC = initializeOpenGLContext(hDC);
 			image = NULL;
 			texture = 0;
+			imageFileName = nullptr;
 		}
 		HGLRC initializeOpenGLContext(HDC hDC);
 		void updateTexture();
@@ -56,6 +57,7 @@ namespace ImageProcessing {
 		HGLRC hGLRC;
 		Image* image;
 		unsigned int texture;
+		System::String^ imageFileName;
 		System::ComponentModel::Container ^components;
 	private: System::Windows::Forms::MenuStrip^  menuStrip1;
 	private: System::Windows::Forms::ToolStripMenuItem^  fileToolStripMenuItem;
@@ -102,6 +104,7 @@ namespace ImageProcessing {
 	private: System::Windows::Forms::ToolStripStatusLabel^  toolStripStatusLabel1;
 	private: System::Windows::Forms::ToolStripProgressBar^  toolStripProgressBar1;
 	private: System::Windows::Forms::Timer^  progressTimer;
+	private: System::Windows::Forms::ToolStripMenuItem^  resetImageToolStripMenuItem;
 
 	private: System::Windows::Forms::Panel^  panel1;
 
@@ -157,6 +160,7 @@ namespace ImageProcessing {
 			this->toolStripProgressBar1 = (gcnew System::Windows::Forms::ToolStripProgressBar());
 			this->openFileDialog1 = (gcnew System::Windows::Forms::OpenFileDialog());
 			this->saveFileDialog1 = (gcnew System::Windows::Forms::SaveFileDialog());
+			this->resetImageToolStripMenuItem = (gcnew System::Windows::Forms::ToolStripMenuItem());
 			this->menuStrip1->SuspendLayout();
 			this->statusStrip1->SuspendLayout();
 			this->SuspendLayout();
@@ -187,9 +191,9 @@ namespace ImageProcessing {
 			// 
 			// fileToolStripMenuItem
 			// 
-			this->fileToolStripMenuItem->DropDownItems->AddRange(gcnew cli::array< System::Windows::Forms::ToolStripItem^  >(4) {
-				this->openImageToolStripMenuItem,
-					this->saveImageToolStripMenuItem, this->toolStripSeparator1, this->filterModeToolStripMenuItem
+			this->fileToolStripMenuItem->DropDownItems->AddRange(gcnew cli::array< System::Windows::Forms::ToolStripItem^  >(5) {
+				this->resetImageToolStripMenuItem,
+					this->openImageToolStripMenuItem, this->saveImageToolStripMenuItem, this->toolStripSeparator1, this->filterModeToolStripMenuItem
 			});
 			this->fileToolStripMenuItem->Name = L"fileToolStripMenuItem";
 			this->fileToolStripMenuItem->Size = System::Drawing::Size(38, 20);
@@ -198,21 +202,21 @@ namespace ImageProcessing {
 			// openImageToolStripMenuItem
 			// 
 			this->openImageToolStripMenuItem->Name = L"openImageToolStripMenuItem";
-			this->openImageToolStripMenuItem->Size = System::Drawing::Size(145, 22);
+			this->openImageToolStripMenuItem->Size = System::Drawing::Size(180, 22);
 			this->openImageToolStripMenuItem->Text = L"Open Image";
 			this->openImageToolStripMenuItem->Click += gcnew System::EventHandler(this, &MainForm::openImageToolStripMenuItem_Click);
 			// 
 			// saveImageToolStripMenuItem
 			// 
 			this->saveImageToolStripMenuItem->Name = L"saveImageToolStripMenuItem";
-			this->saveImageToolStripMenuItem->Size = System::Drawing::Size(145, 22);
+			this->saveImageToolStripMenuItem->Size = System::Drawing::Size(180, 22);
 			this->saveImageToolStripMenuItem->Text = L"Save Image";
 			this->saveImageToolStripMenuItem->Click += gcnew System::EventHandler(this, &MainForm::saveImageToolStripMenuItem_Click);
 			// 
 			// toolStripSeparator1
 			// 
 			this->toolStripSeparator1->Name = L"toolStripSeparator1";
-			this->toolStripSeparator1->Size = System::Drawing::Size(142, 6);
+			this->toolStripSeparator1->Size = System::Drawing::Size(177, 6);
 			// 
 			// filterModeToolStripMenuItem
 			// 
@@ -221,7 +225,7 @@ namespace ImageProcessing {
 					this->gLLINEARToolStripMenuItem
 			});
 			this->filterModeToolStripMenuItem->Name = L"filterModeToolStripMenuItem";
-			this->filterModeToolStripMenuItem->Size = System::Drawing::Size(145, 22);
+			this->filterModeToolStripMenuItem->Size = System::Drawing::Size(180, 22);
 			this->filterModeToolStripMenuItem->Text = L"Filter Mode";
 			// 
 			// gLNEARESTToolStripMenuItem
@@ -257,6 +261,7 @@ namespace ImageProcessing {
 			this->grayToolStripMenuItem->Name = L"grayToolStripMenuItem";
 			this->grayToolStripMenuItem->Size = System::Drawing::Size(196, 22);
 			this->grayToolStripMenuItem->Text = L"Gray";
+			this->grayToolStripMenuItem->Click += gcnew System::EventHandler(this, &MainForm::grayToolStripMenuItem_Click);
 			// 
 			// uniformQuantizationToolStripMenuItem
 			// 
@@ -466,7 +471,7 @@ namespace ImageProcessing {
 			// toolStripStatusLabel1
 			// 
 			this->toolStripStatusLabel1->Name = L"toolStripStatusLabel1";
-			this->toolStripStatusLabel1->Size = System::Drawing::Size(436, 17);
+			this->toolStripStatusLabel1->Size = System::Drawing::Size(467, 17);
 			this->toolStripStatusLabel1->Spring = true;
 			this->toolStripStatusLabel1->TextAlign = System::Drawing::ContentAlignment::MiddleLeft;
 			// 
@@ -479,6 +484,13 @@ namespace ImageProcessing {
 			// openFileDialog1
 			// 
 			this->openFileDialog1->FileName = L"openFileDialog1";
+			// 
+			// resetImageToolStripMenuItem
+			// 
+			this->resetImageToolStripMenuItem->Name = L"resetImageToolStripMenuItem";
+			this->resetImageToolStripMenuItem->Size = System::Drawing::Size(180, 22);
+			this->resetImageToolStripMenuItem->Text = L"Reset Image";
+			this->resetImageToolStripMenuItem->Click += gcnew System::EventHandler(this, &MainForm::resetImageToolStripMenuItem_Click);
 			// 
 			// MainForm
 			// 
@@ -518,15 +530,13 @@ private: System::Void gLLINEARToolStripMenuItem_CheckedChanged(System::Object^  
 		updateTexture();
 	}
 }
-public: void openImage(System::String^ imageFileName) {
+public: static Image* openImage(System::String^ imageFileName) {
 	try {
 		System::Drawing::Bitmap^ bitmap = gcnew System::Drawing::Bitmap(imageFileName);
 		System::Drawing::Rectangle rect = System::Drawing::Rectangle(0, 0, bitmap->Width, bitmap->Height);
 		System::Drawing::Imaging::BitmapData^ bitmapData = bitmap->LockBits(rect, System::Drawing::Imaging::ImageLockMode::ReadOnly, bitmap->PixelFormat);
 		unsigned char* data = (unsigned char*)bitmapData->Scan0.ToPointer();
-		if (image) {
-			delete image;
-		}
+		Image *image;
 		if (bitmap->PixelFormat == System::Drawing::Imaging::PixelFormat::Format24bppRgb) {
 			image = new Image(bitmap->Width, bitmap->Height, data, false);
 		}
@@ -534,19 +544,29 @@ public: void openImage(System::String^ imageFileName) {
 			image = new Image(bitmap->Width, bitmap->Height, data);
 		}
 		bitmap->UnlockBits(bitmapData);
-		updateTexture();
-		this->toolStripStatusLabel1->Text = "Open image: " + imageFileName;
+		return image;
 	}
 	catch (...) {
-		this->toolStripStatusLabel1->Text = "Can't open image: " + imageFileName;
+		return NULL;
 	}
+}
+public: void setImage(Image* image) {
+	if (this->image) {
+		delete this->image;
+	}
+	this->image = image;
+	updateTexture();
+}
+public: void setImage(System::String^ imageFileName) {
+	setImage(openImage(imageFileName));
+	this->toolStripStatusLabel1->Text = (this->image ? "Open image: " : "Can't open image: ") + imageFileName;
 }
 private: System::Void openImageToolStripMenuItem_Click(System::Object^  sender, System::EventArgs^  e) {
 	if (openFileDialog1->ShowDialog() == System::Windows::Forms::DialogResult::OK) {
-		openImage(openFileDialog1->FileName);
+		setImage(openFileDialog1->FileName);
 	}
 }
-public: void saveImage(System::String^ imageFileName) {
+public: static bool saveImage(Image* image, System::String^ imageFileName) {
 	try {
 		System::Drawing::Bitmap^ bitmap = gcnew System::Drawing::Bitmap(image->width, image->height, System::Drawing::Imaging::PixelFormat::Format32bppArgb);
 		System::Drawing::Rectangle rect = System::Drawing::Rectangle(0, 0, bitmap->Width, bitmap->Height);
@@ -560,11 +580,14 @@ public: void saveImage(System::String^ imageFileName) {
 		}
 		bitmap->UnlockBits(bitmapData);
 		bitmap->Save(imageFileName, System::Drawing::Imaging::ImageFormat::Png);
-		this->toolStripStatusLabel1->Text = "Save image: " + imageFileName;
+		return true;
 	}
 	catch (...) {
-		this->toolStripStatusLabel1->Text = "Can't save image: " + imageFileName;
+		return false;
 	}
+}
+public: void saveImage(System::String^ imageFileName) {
+	this->toolStripStatusLabel1->Text = (saveImage(image, imageFileName) ? "Save image: " : "Can't save image: ") + imageFileName;
 }
 private: System::Void saveImageToolStripMenuItem_Click(System::Object^  sender, System::EventArgs^  e) {
 	if (saveFileDialog1->ShowDialog() == System::Windows::Forms::DialogResult::OK) {
@@ -575,6 +598,14 @@ private: System::Void progressTimer_Tick(System::Object^  sender, System::EventA
 	if (image) {
 		this->toolStripProgressBar1->Value = min(max(image->progress, 0), 100);
 	}
+}
+private: System::Void resetImageToolStripMenuItem_Click(System::Object^  sender, System::EventArgs^  e) {
+	if (imageFileName) {
+		setImage(imageFileName);
+	}
+}
+private: System::Void grayToolStripMenuItem_Click(System::Object^  sender, System::EventArgs^  e) {
+	System::Threading::Thread::Sleep(10000);
 }
 };
 }
