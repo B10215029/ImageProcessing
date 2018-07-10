@@ -24,10 +24,20 @@ namespace ImageProcessing {
 			this->progressTimer = gcnew System::Windows::Forms::Timer();
 			this->progressTimer->Tick += gcnew System::EventHandler(this, &MainForm::progressTimer_Tick);
 			this->progressTimer->Enabled = true;
+			this->panel1->MouseDown += (gcnew System::Windows::Forms::MouseEventHandler(this, &MainForm::panel1_MouseDown));
+			this->panel1->MouseUp += (gcnew System::Windows::Forms::MouseEventHandler(this, &MainForm::panel1_MouseUp));
+			this->panel1->MouseMove += (gcnew System::Windows::Forms::MouseEventHandler(this, &MainForm::panel1_MouseMove));
+			this->panel1->MouseWheel += (gcnew System::Windows::Forms::MouseEventHandler(this, &MainForm::panel1_MouseWheel));
+			this->panel1->DragEnter += (gcnew System::Windows::Forms::DragEventHandler(this, &MainForm::panel1_DragEnter));
+			this->panel1->DragDrop += (gcnew System::Windows::Forms::DragEventHandler(this, &MainForm::panel1_DragDrop));
+			this->panel1->AllowDrop = true;
 			hDC = GetDC((HWND)(panel1->Handle.ToInt32()));
 			hGLRC = initializeOpenGLContext(hDC);
 			image = NULL;
 			texture = 0;
+			mouseX = -1;
+			mouseY = -1;
+			mouseDown = false;
 			imageFileName = nullptr;
 		}
 		HGLRC initializeOpenGLContext(HDC hDC);
@@ -57,6 +67,9 @@ namespace ImageProcessing {
 		HGLRC hGLRC;
 		Image* image;
 		unsigned int texture;
+		int mouseX;
+		int mouseY;
+		bool mouseDown;
 		System::String^ imageFileName;
 		System::ComponentModel::Container ^components;
 	private: System::Windows::Forms::MenuStrip^  menuStrip1;
@@ -558,6 +571,7 @@ public: void setImage(Image* image) {
 	updateTexture();
 }
 public: void setImage(System::String^ imageFileName) {
+	this->imageFileName = imageFileName;
 	setImage(openImage(imageFileName));
 	this->toolStripStatusLabel1->Text = (this->image ? "Open image: " : "Can't open image: ") + imageFileName;
 }
@@ -593,6 +607,39 @@ private: System::Void saveImageToolStripMenuItem_Click(System::Object^  sender, 
 	if (saveFileDialog1->ShowDialog() == System::Windows::Forms::DialogResult::OK) {
 		saveImage(saveFileDialog1->FileName);
 	}
+}
+private: System::Void panel1_MouseDown(System::Object^  sender, System::Windows::Forms::MouseEventArgs^  e) {
+	mouseDown = true;
+	mouseX = e->X;
+	mouseY = e->Y;
+}
+private: System::Void panel1_MouseUp(System::Object^  sender, System::Windows::Forms::MouseEventArgs^  e) {
+	mouseDown = false;
+}
+private: System::Void panel1_MouseMove(System::Object^  sender, System::Windows::Forms::MouseEventArgs^  e) {
+	if (mouseDown && image) {
+		image->offsetX += e->X - mouseX;
+		image->offsetY += e->Y - mouseY;
+		draw();
+	}
+	mouseX = e->X;
+	mouseY = e->Y;
+}
+private: System::Void panel1_MouseWheel(System::Object^  sender, System::Windows::Forms::MouseEventArgs^  e) {
+	if (image) {
+		image->scale += e->Delta > 0 ? 1 : -1;
+		draw();
+	}
+}
+private: System::Void panel1_DragDrop(System::Object^  sender, System::Windows::Forms::DragEventArgs^  e) {
+	auto imageFileName = ((array<String^>^)(e->Data->GetData(DataFormats::FileDrop)))[0];
+	setImage(imageFileName);
+}
+private: System::Void panel1_DragEnter(System::Object^  sender, System::Windows::Forms::DragEventArgs^  e) {
+	if (e->Data->GetDataPresent(DataFormats::FileDrop))
+		e->Effect = DragDropEffects::Copy;
+	else
+		e->Effect = DragDropEffects::None;
 }
 private: System::Void progressTimer_Tick(System::Object^  sender, System::EventArgs^  e) {
 	if (image) {

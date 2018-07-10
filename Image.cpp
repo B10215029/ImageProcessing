@@ -5,6 +5,9 @@ ImageProcessing::Image::Image(int width, int height, unsigned char* data, bool h
 	this->width = width;
 	this->height = height;
 	this->progress = 0;
+	this->scale = 0;
+	this->offsetX = 0;
+	this->offsetY = 0;
 	this->data = new unsigned char[width * height * 4];
 	if (hasAlpha) {
 		for (int i = 0, n = width * height; i < n; i++) {

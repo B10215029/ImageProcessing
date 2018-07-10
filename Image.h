@@ -7,6 +7,9 @@ namespace ImageProcessing {
 		int width;
 		int height;
 		int progress;
+		double scale;
+		int offsetX;
+		int offsetY;
 		unsigned char* data;
 	};
 }
