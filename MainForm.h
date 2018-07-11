@@ -707,11 +707,13 @@ private: System::Void runProcessing(Object^ args) {
 	}
 }
 private: System::Void startProcessing(ImageVoidArgFunctionObject::FunctionType func) {
-	progressingThread = gcnew System::Threading::Thread(gcnew System::Threading::ParameterizedThreadStart(this, &MainForm::runProcessing));
-	progressingThread->Start(gcnew ImageVoidArgFunctionObject(func));
+	if (image && !this->progressTimer->Enabled) {
+		progressingThread = gcnew System::Threading::Thread(gcnew System::Threading::ParameterizedThreadStart(this, &MainForm::runProcessing));
+		progressingThread->Start(gcnew ImageVoidArgFunctionObject(func));
+	}
 }
 private: System::Void startProcessing(ImageImageArgFunctionObject::FunctionType func) {
-	if (openFileDialog1->ShowDialog() == System::Windows::Forms::DialogResult::OK) {
+	if (image && !this->progressTimer->Enabled && openFileDialog1->ShowDialog() == System::Windows::Forms::DialogResult::OK) {
 		progressingThread = gcnew System::Threading::Thread(gcnew System::Threading::ParameterizedThreadStart(this, &MainForm::runProcessing));
 		progressingThread->Start(gcnew ImageImageArgFunctionObject(func, openImage(openFileDialog1->FileName)));
 	}
