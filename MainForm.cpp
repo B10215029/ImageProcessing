@@ -96,8 +96,8 @@ void ImageProcessing::MainForm::draw()
 		float scaleY = ((float)image->height / image->width) / ((float)panel1->Height / panel1->Width);
 		float offsetX = (float)image->offsetX / panel1->Width * 2;
 		float offsetY = -(float)image->offsetY / panel1->Height * 2;
-		scaleX = (scaleX < 1 ? scaleX : 1) * pow(1.5, image->scale);
-		scaleY = (scaleY < 1 ? scaleY : 1) * pow(1.5, image->scale);
+		scaleX = (scaleX < 1 ? scaleX : 1) * pow(SCALE_FACTOR, image->scale);
+		scaleY = (scaleY < 1 ? scaleY : 1) * pow(SCALE_FACTOR, image->scale);
 		glColor3f(1, 1, 1);
 		glBindTexture(GL_TEXTURE_2D, texture);
 		glBegin(GL_QUADS);

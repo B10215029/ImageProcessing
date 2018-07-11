@@ -2,6 +2,7 @@
 #include <Windows.h>
 #include <gl\GL.h>
 #include "Image.h"
+#define SCALE_FACTOR 1.5
 
 namespace ImageProcessing {
 
@@ -114,7 +115,7 @@ namespace ImageProcessing {
 	private: System::Windows::Forms::ToolStripStatusLabel^  toolStripStatusLabel1;
 	private: System::Windows::Forms::ToolStripProgressBar^  toolStripProgressBar1;
 	private: System::Windows::Forms::Timer^  progressTimer;
-	private: System::Windows::Forms::ToolStripMenuItem^  resetImageToolStripMenuItem;
+	private: System::Windows::Forms::ToolStripMenuItem^  reopenImageToolStripMenuItem;
 
 	private: System::Windows::Forms::Panel^  panel1;
 
@@ -128,7 +129,7 @@ namespace ImageProcessing {
 			this->panel1 = (gcnew System::Windows::Forms::Panel());
 			this->menuStrip1 = (gcnew System::Windows::Forms::MenuStrip());
 			this->fileToolStripMenuItem = (gcnew System::Windows::Forms::ToolStripMenuItem());
-			this->resetImageToolStripMenuItem = (gcnew System::Windows::Forms::ToolStripMenuItem());
+			this->reopenImageToolStripMenuItem = (gcnew System::Windows::Forms::ToolStripMenuItem());
 			this->openImageToolStripMenuItem = (gcnew System::Windows::Forms::ToolStripMenuItem());
 			this->saveImageToolStripMenuItem = (gcnew System::Windows::Forms::ToolStripMenuItem());
 			this->toolStripSeparator1 = (gcnew System::Windows::Forms::ToolStripSeparator());
@@ -202,38 +203,38 @@ namespace ImageProcessing {
 			// fileToolStripMenuItem
 			// 
 			this->fileToolStripMenuItem->DropDownItems->AddRange(gcnew cli::array< System::Windows::Forms::ToolStripItem^  >(5) {
-				this->resetImageToolStripMenuItem,
+				this->reopenImageToolStripMenuItem,
 					this->openImageToolStripMenuItem, this->saveImageToolStripMenuItem, this->toolStripSeparator1, this->filterModeToolStripMenuItem
 			});
 			this->fileToolStripMenuItem->Name = L"fileToolStripMenuItem";
 			this->fileToolStripMenuItem->Size = System::Drawing::Size(38, 20);
 			this->fileToolStripMenuItem->Text = L"File";
 			// 
-			// resetImageToolStripMenuItem
+			// reopenImageToolStripMenuItem
 			// 
-			this->resetImageToolStripMenuItem->Name = L"resetImageToolStripMenuItem";
-			this->resetImageToolStripMenuItem->Size = System::Drawing::Size(145, 22);
-			this->resetImageToolStripMenuItem->Text = L"Reset Image";
-			this->resetImageToolStripMenuItem->Click += gcnew System::EventHandler(this, &MainForm::resetImageToolStripMenuItem_Click);
+			this->reopenImageToolStripMenuItem->Name = L"reopenImageToolStripMenuItem";
+			this->reopenImageToolStripMenuItem->Size = System::Drawing::Size(180, 22);
+			this->reopenImageToolStripMenuItem->Text = L"Reopen Image";
+			this->reopenImageToolStripMenuItem->Click += gcnew System::EventHandler(this, &MainForm::reopenImageToolStripMenuItem_Click);
 			// 
 			// openImageToolStripMenuItem
 			// 
 			this->openImageToolStripMenuItem->Name = L"openImageToolStripMenuItem";
-			this->openImageToolStripMenuItem->Size = System::Drawing::Size(145, 22);
+			this->openImageToolStripMenuItem->Size = System::Drawing::Size(180, 22);
 			this->openImageToolStripMenuItem->Text = L"Open Image";
 			this->openImageToolStripMenuItem->Click += gcnew System::EventHandler(this, &MainForm::openImageToolStripMenuItem_Click);
 			// 
 			// saveImageToolStripMenuItem
 			// 
 			this->saveImageToolStripMenuItem->Name = L"saveImageToolStripMenuItem";
-			this->saveImageToolStripMenuItem->Size = System::Drawing::Size(145, 22);
+			this->saveImageToolStripMenuItem->Size = System::Drawing::Size(180, 22);
 			this->saveImageToolStripMenuItem->Text = L"Save Image";
 			this->saveImageToolStripMenuItem->Click += gcnew System::EventHandler(this, &MainForm::saveImageToolStripMenuItem_Click);
 			// 
 			// toolStripSeparator1
 			// 
 			this->toolStripSeparator1->Name = L"toolStripSeparator1";
-			this->toolStripSeparator1->Size = System::Drawing::Size(142, 6);
+			this->toolStripSeparator1->Size = System::Drawing::Size(177, 6);
 			// 
 			// filterModeToolStripMenuItem
 			// 
@@ -242,7 +243,7 @@ namespace ImageProcessing {
 					this->gLLINEARToolStripMenuItem
 			});
 			this->filterModeToolStripMenuItem->Name = L"filterModeToolStripMenuItem";
-			this->filterModeToolStripMenuItem->Size = System::Drawing::Size(145, 22);
+			this->filterModeToolStripMenuItem->Size = System::Drawing::Size(180, 22);
 			this->filterModeToolStripMenuItem->Text = L"Filter Mode";
 			// 
 			// gLNEARESTToolStripMenuItem
@@ -635,6 +636,8 @@ private: System::Void panel1_MouseMove(System::Object^  sender, System::Windows:
 private: System::Void panel1_MouseWheel(System::Object^  sender, System::Windows::Forms::MouseEventArgs^  e) {
 	if (image) {
 		image->scale += e->Delta > 0 ? 1 : -1;
+		image->offsetX += (image->offsetX - (e->X - panel1->Width / 2.0)) * ((e->Delta > 0 ? SCALE_FACTOR : (1.0 / SCALE_FACTOR)) - 1);
+		image->offsetY += (image->offsetY - (e->Y - panel1->Height / 2.0)) * ((e->Delta > 0 ? SCALE_FACTOR : (1.0 / SCALE_FACTOR)) - 1);
 		draw();
 	}
 }
@@ -653,7 +656,7 @@ private: System::Void progressTimer_Tick(System::Object^  sender, System::EventA
 		SetProgress(image->progress);
 	}
 }
-private: System::Void resetImageToolStripMenuItem_Click(System::Object^  sender, System::EventArgs^  e) {
+private: System::Void reopenImageToolStripMenuItem_Click(System::Object^  sender, System::EventArgs^  e) {
 	if (imageFileName) {
 		setImage(imageFileName);
 	}

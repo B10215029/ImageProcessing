@@ -8,8 +8,8 @@ namespace ImageProcessing {
 		int height;
 		int progress;
 		double scale;
-		int offsetX;
-		int offsetY;
+		double offsetX;
+		double offsetY;
 		unsigned char* data;
 
 	public:
